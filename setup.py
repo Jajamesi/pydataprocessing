@@ -17,7 +17,6 @@ setup(
         'thefuzz>=0.20.0',
         'streamlit>=1.27.2',
         'weightipy>=0.3.3',
-        'pillow>=11.0.0',
     ],
     classifiers=[
         'Programming Language :: Python :: 3',
