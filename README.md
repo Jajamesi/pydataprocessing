@@ -1,1 +1,3 @@
-pip install git+https://github.com/jajamesi/pydataprocessing.git
+# Pydataprocessing
+
+`pip install git+https://github.com/jajamesi/pydataprocessing.git`
