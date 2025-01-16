@@ -2,7 +2,6 @@ import pandas as pd
 pd.options.mode.copy_on_write = True
 
 import numpy as np
-from savReaderWriter import SavReader, SavHeaderReader, SavWriter
 from collections import defaultdict
 from .classes import metadata_obj
 from typing import List, Any, Union
@@ -16,6 +15,13 @@ import re
 from thefuzz import fuzz
 import difflib
 
+import collections
+import collections.abc
+
+# Monkey-patch to fix the Iterable import issue in savReaderWriter
+if not hasattr(collections, 'Iterable'):
+    collections.Iterable = collections.abc.Iterable
+from savReaderWriter import SavReader, SavHeaderReader, SavWriter
 
 def unique_no_nan(_x):
     """
