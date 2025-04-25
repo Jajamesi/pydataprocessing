@@ -4,6 +4,8 @@ import weightipy as wp
 import math
 from collections import defaultdict
 
+from . import z_test
+
 
 def create_table(
         df,
@@ -16,6 +18,7 @@ def create_table(
         calc_r_cl=True,
         client_sublabels=False,
         calc_mean=True,
+        cl=None
 ):
 
 
@@ -283,13 +286,15 @@ def create_table(
     client_tables = []
     mean_tables = []
     abs_tables = []
+    sig_tables = []
+    sig_mean_tables = []
 
     # Initialize base series for client tables
     client_base = pd.Series([0])
 
     # Loop through all variables and all banner variables, generating pivot tables
     for row_i, row_var in enumerate(df.columns):
-        print(row_var)
+        # print(row_var)
 
         # Don't use variable if it is not single or multiple punch
         q_type_condition = meta.q_type[row_var] not in ['singlepunch', 'multipunch']
@@ -575,17 +580,27 @@ def create_table(
         table.columns = pd.MultiIndex.from_tuples(banner_labels, names=[None, None, None, None])
     sum_client_table.columns = pd.MultiIndex.from_tuples(client_banner_labels, names=[None, None, None])
 
+    tables_list = [
+       sum_pivot_table,
+       sum_round_table,
+       sum_mean_table,
+       sum_client_table,
+       sum_abs_table
+       ]
     sheet_labels = ['Результаты', 'Округленные', 'Средние', 'Для заказчика', 'Абсолюты']
 
-    final_tables = dict(zip(sheet_labels, [
-                               sum_pivot_table,
-                               sum_round_table,
-                               sum_mean_table,
-                               sum_client_table,
-                               sum_abs_table
-                               ]
-                            )
-                        )
+    # added z-test calculation
+    if cl:
+        sig_prop_tables = z_test.calc_sig_prop(sum_pivot_table, cl)
+        tables_list.append(sig_prop_tables)
+        sheet_labels.append(f'Результаты CL{int((1-cl)*100)}%')
+
+        if not sum_mean_table.empty:
+            sig_mean_tables = z_test.calc_sig_mean(sum_mean_table, cl)
+            tables_list.append(sig_mean_tables)
+            sheet_labels.append(f'Средние CL{int((1-cl)*100)}%')
+
+    final_tables = dict(zip(sheet_labels, tables_list))
 
     return final_tables
 
@@ -640,6 +655,10 @@ def table_export(export_path, tables, empty_sheets=True, wt_var=None):
             elif idx <= mcr.max_row:
                 mcr.shrink(bottom=1)
 
+    low_sig_fill = PatternFill(start_color="FF9999", end_color="FF9999", fill_type="solid")
+    high_sig_fill = PatternFill(start_color="C6E0B4", end_color="C6E0B4", fill_type="solid")
+    low_base_fill = PatternFill(start_color="C8C8C8", end_color="C8C8C8", fill_type="solid")
+
 
     with pd.ExcelWriter(export_path, engine='openpyxl') as writer:
         for sheet_name, table in tables.items():
@@ -664,6 +683,9 @@ def table_export(export_path, tables, empty_sheets=True, wt_var=None):
             continue
 
         ws = wb[sheet_name]
+        print(sheet_name)
+        is_sig = "CL" in sheet_name
+        print(is_sig)
 
         if sheet_name != 'Для заказчика':
             delete_empty_row(ws, 5)
@@ -704,7 +726,9 @@ def table_export(export_path, tables, empty_sheets=True, wt_var=None):
 
         for i, value in enumerate(table.index, start=row_start):
             for j in range(column_len):
-                cell = ws.cell(row=i, column=j + row_intendant)
+                col_i=j + row_intendant
+                print(col_i)
+                cell = ws.cell(row=i, column=col_i)
 
                 if sheet_name == 'Абсолюты':
                     cell.number_format = number_format
@@ -718,6 +742,26 @@ def table_export(export_path, tables, empty_sheets=True, wt_var=None):
                         cell.number_format = percentage_format
                     else:
                         cell.number_format = number_format
+
+                    # ADD SIG COLOR
+                    if is_sig and (col_i%2==1):
+                        print(cell)
+
+                        v = cell.value
+                        if pd.notna(v):
+                            s = str(v)
+                            if "<t" in s:
+                                cell.fill = low_sig_fill
+                                ws.cell(row=i, column=col_i-1).fill = low_sig_fill
+                            elif ">t" in s:
+                                cell.fill = high_sig_fill
+                                ws.cell(row=i, column=col_i-1).fill = high_sig_fill
+
+                            elif s == "_":
+                                cell.value = ""
+                                cell.fill = low_base_fill
+                                ws.cell(row=i, column=col_i-1).fill = low_base_fill
+
                 else:
                     if value[1] != 'Валидные':
                         cell.number_format = decimal_format

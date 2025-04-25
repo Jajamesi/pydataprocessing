@@ -1,9 +1,9 @@
 __version__ = '0.5.1'
 
-from .classes import (metadata_obj,
-                      _block,
-                      _question
-                      )
+from .models import (metadata_obj,
+                     _block,
+                     _question
+                     )
 
 from .worker import (read_spss,
                      write_spss,

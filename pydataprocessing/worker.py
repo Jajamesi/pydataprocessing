@@ -3,7 +3,7 @@ pd.options.mode.copy_on_write = True
 
 import numpy as np
 from collections import defaultdict
-from .classes import metadata_obj
+from .models import metadata_obj
 from typing import List, Any, Union
 import warnings
 import os
@@ -71,7 +71,9 @@ def read_spss(file_path, unprinted_symbol_clear: bool = True):
     # streamlit work around - if file path is already bytes, just use it
     if isinstance(file_path, bytes):
         file_contents = file_path
+        name, extension = "default", "sav"
     else:
+        name, extension = os.path.splitext(os.path.basename(file_path))
         with open(file_path, 'rb') as file:
             file_contents = file.read()
 
@@ -89,7 +91,7 @@ def read_spss(file_path, unprinted_symbol_clear: bool = True):
         _meta = metadata_obj()
 
         # Set the file name and extension
-        _meta.file_name, _meta.file_extension = os.path.splitext(os.path.basename(file_path))
+        _meta.file_name, _meta.file_extension = name, extension
 
         # Decode var names and filter out empty values
         _meta.var_names = [_decode(value) for value in _metadata.varNames if _decode(value)]
