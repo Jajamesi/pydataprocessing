@@ -727,7 +727,7 @@ def table_export(export_path, tables, empty_sheets=True, wt_var=None):
         for i, value in enumerate(table.index, start=row_start):
             for j in range(column_len):
                 col_i=j + row_intendant
-                print(col_i)
+                # print(col_i)
                 cell = ws.cell(row=i, column=col_i)
 
                 if sheet_name == 'Абсолюты':
@@ -745,7 +745,7 @@ def table_export(export_path, tables, empty_sheets=True, wt_var=None):
 
                     # ADD SIG COLOR
                     if is_sig and (col_i%2==1):
-                        print(cell)
+                        # print(cell)
 
                         v = cell.value
                         if pd.notna(v):
