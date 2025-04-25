@@ -6,6 +6,8 @@ from collections import defaultdict
 
 from . import z_test
 
+import warnings
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 def create_table(
         df,
@@ -683,9 +685,9 @@ def table_export(export_path, tables, empty_sheets=True, wt_var=None):
             continue
 
         ws = wb[sheet_name]
-        print(sheet_name)
+        # print(sheet_name)
         is_sig = "CL" in sheet_name
-        print(is_sig)
+        # print(is_sig)
 
         if sheet_name != 'Для заказчика':
             delete_empty_row(ws, 5)
@@ -732,7 +734,7 @@ def table_export(export_path, tables, empty_sheets=True, wt_var=None):
 
                 if sheet_name == 'Абсолюты':
                     cell.number_format = number_format
-                elif sheet_name != 'Средние':
+                elif not sheet_name.startswith('Средние'):
                     if (value[1] == 'Среднее') and (sheet_name == 'Для заказчика'):
                         if ws.cell(row=i - 1, column=2).value.startswith('Bottom'):
                             cell.number_format = decimal_format
@@ -742,25 +744,6 @@ def table_export(export_path, tables, empty_sheets=True, wt_var=None):
                         cell.number_format = percentage_format
                     else:
                         cell.number_format = number_format
-
-                    # ADD SIG COLOR
-                    if is_sig and (col_i%2==1):
-                        # print(cell)
-
-                        v = cell.value
-                        if pd.notna(v):
-                            s = str(v)
-                            if "<t" in s:
-                                cell.fill = low_sig_fill
-                                ws.cell(row=i, column=col_i-1).fill = low_sig_fill
-                            elif ">t" in s:
-                                cell.fill = high_sig_fill
-                                ws.cell(row=i, column=col_i-1).fill = high_sig_fill
-
-                            elif s == "_":
-                                cell.value = ""
-                                cell.fill = low_base_fill
-                                ws.cell(row=i, column=col_i-1).fill = low_base_fill
 
                 else:
                     if value[1] != 'Валидные':
@@ -774,6 +757,25 @@ def table_export(export_path, tables, empty_sheets=True, wt_var=None):
                     cell.font = Font(name='Arial', color="000000", bold=True, size=9)
                 else:
                     cell.font = Font(name='Arial', color="000000", bold=False, size=9)
+
+                # ADD SIG COLOR
+                if is_sig and (col_i % 2 == 1):
+                    # print(cell)
+
+                    v = cell.value
+                    if pd.notna(v):
+                        s = str(v)
+                        if "<t" in s:
+                            cell.fill = low_sig_fill
+                            ws.cell(row=i, column=col_i - 1).fill = low_sig_fill
+                        elif ">t" in s:
+                            cell.fill = high_sig_fill
+                            ws.cell(row=i, column=col_i - 1).fill = high_sig_fill
+
+                        elif s == "_":
+                            cell.value = ""
+                            cell.fill = low_base_fill
+                            ws.cell(row=i, column=col_i - 1).fill = low_base_fill
 
         # Client table base formatting
         if sheet_name == 'Для заказчика':
