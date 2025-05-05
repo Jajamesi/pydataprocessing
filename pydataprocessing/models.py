@@ -50,11 +50,14 @@ class metadata_obj:
         self.file_extension = str()
 
 
+    
+
     def unprinted_symbol_clear(self):
         """
         This function replaces certain characters in var names and labels
         to remove unprinted symbols.
         """
+        
 
         def is_not_number(value):
             """Check if the value is a number (int or float)."""
@@ -73,6 +76,15 @@ class metadata_obj:
             '\n': ' '
         }
 
+        def safe_transform(value):
+            try:
+                if is_not_number(value):
+                    return ''.join(replace_chars.get(char, char) for char in value).strip().strip("? ")
+                else:
+                    return str(value)
+            except Exception:
+                return value
+
         # Iterate over the var_names_to_labels dictionary
         # and replace the characters in the values and delete extra "?"
         self.var_names_to_labels = {
@@ -87,9 +99,7 @@ class metadata_obj:
         # and replace the characters in the values and delete extra "?"
         self.var_value_labels = {
             out_key: {
-                key: ''.join(replace_chars.get(char, char) for char in value).strip().strip("? ")
-                if is_not_number(value) else str(value)
-                for key, value in self.var_value_labels[out_key].items()
+                key: safe_transform(value) for key, value in self.var_value_labels[out_key].items()
             }
             for out_key, inner_dict in self.var_value_labels.items()
         }
