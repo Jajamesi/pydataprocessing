@@ -131,13 +131,13 @@ def read_spss(file_path, unprinted_symbol_clear: bool = True):
         }
 
         # Set default display widths to 10 for all vars
-        _meta.var_display_widths = defaultdict(lambda: None, {name: 10 for name in _meta.var_names})
+        _meta.var_display_widths = {name: 10 for name in _meta.var_names}
 
         # Set default alignments to 'left' if var type is present, 'center' otherwise
-        _meta.var_alignments = defaultdict(lambda: None, {
+        _meta.var_alignments = {
             name: 'left' if _meta.var_types.get(name) else 'center'
             for name in _meta.var_names
-        })
+        }
 
         # clean unprinted symbols
         if unprinted_symbol_clear:
@@ -162,10 +162,17 @@ def read_spss(file_path, unprinted_symbol_clear: bool = True):
 
         # Decode string vars
         var_to_decode = [var for var in _meta.var_names if _meta.var_types.get(var)]
-        _df.loc[:, var_to_decode] = _df.loc[:, var_to_decode].apply(lambda x:
-                                                    x.apply(lambda value:
-                                                            value.decode('Windows-1251', errors="ignore")
-                                                            if value != b"" else np.nan))
+
+        def decode_value(value):
+            if value != b"":
+                return value.decode('Windows-1251', errors="ignore")
+            else:
+                return np.nan
+
+        def decode_column(series):
+            return series.apply(decode_value)
+
+        _df.loc[:, var_to_decode] = _df.loc[:, var_to_decode].apply(decode_column)
 
         os.remove(_temp_spss_name)
         return _df, _meta
@@ -223,13 +230,17 @@ def write_spss(
 
     # Encode dataframe var values to Windows-1251
     _vars_to_encode = [var for var in _meta.var_names if _meta.var_types.get(var)]
-    _df[_vars_to_encode] = _df[_vars_to_encode].apply(lambda x:
-                                                x.apply(lambda value:
-                                                        str(value).encode(
-                                                            encoding = "Windows-1251",
-                                                            errors= "replace"
-                                                        )
-                                                        if not pd.isna(value) else b"")).astype(bytes)
+
+    def encode_value(value):
+        if pd.isna(value):
+            return b""
+        return str(value).encode("Windows-1251", errors="replace")
+
+    def encode_column(series):
+        return series.apply(encode_value)
+
+    _df[_vars_to_encode] = _df[_vars_to_encode].apply(encode_column)
+
 
     # Add extension to the file name
     _extension = f".{extension}"
