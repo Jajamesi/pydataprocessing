@@ -16,31 +16,31 @@ class metadata_obj:
         # default features
         self.var_names = list()
         self.original_vars = list()
-        self.var_names_to_labels = defaultdict(lambda: None)
-        self.var_labels_to_names = defaultdict(lambda: None)
-        self.var_value_labels = defaultdict(lambda: None)
-        self.var_measure = defaultdict(lambda: None)
-        self.var_formats = defaultdict(lambda: None)
-        self.var_types = defaultdict(lambda: None)
-        self.var_display_widths = defaultdict(lambda: None)
-        self.var_alignments = defaultdict(lambda: None)
+        self.var_names_to_labels = {}
+        self.var_labels_to_names = {}
+        self.var_value_labels = {}
+        self.var_measure = {}
+        self.var_formats = {}
+        self.var_types = {}
+        self.var_display_widths = {}
+        self.var_alignments = {}
 
         # type according to type_vars()
-        self.q_type = defaultdict(lambda: None)
+        self.q_type = {}
 
         # metadata for pure scale vars
         self.scale_vars = list()
-        self.scale_recode_for_mean = defaultdict(lambda: None)
-        self.scale_recode_for_aggregate = defaultdict(lambda: None)
-        self.scale_value_labels = defaultdict(lambda: None)
+        self.scale_recode_for_mean = {}
+        self.scale_recode_for_aggregate = {}
+        self.scale_value_labels = {}
 
         self.zero_vars = list()
-        self.recode_pairs = defaultdict(lambda: None)
+        self.recode_pairs = {}
 
         # metadata for half scale vars
         self.half_scale_vars = list()
-        self.half_scale_recode_for_aggregate = defaultdict(lambda: None)
-        self.half_scale_value_labels = defaultdict(lambda: None)
+        self.half_scale_recode_for_aggregate = {}
+        self.half_scale_value_labels = {}
 
         # metadata for awareness vars
         self.awareness_vars = list()
@@ -112,9 +112,9 @@ class metadata_obj:
         # update var names as df columns
         self.var_names = list(df.columns)
         if not hasattr(self, 'var_alignments'):
-            self.var_alignments = defaultdict(lambda: None)
+            self.var_alignments = {}
         if not hasattr(self, 'var_display_widths'):
-            self.var_display_widths = defaultdict(lambda: None)
+            self.var_display_widths = {}
 
         # if custom meta is provided, use it primarily
         if custom_meta:
